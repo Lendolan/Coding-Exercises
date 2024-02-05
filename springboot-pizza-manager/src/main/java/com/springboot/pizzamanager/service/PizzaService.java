@@ -30,7 +30,7 @@ public class PizzaService {
     }
 
     public Pizza addPizza(Pizza pizza) {
-        // Additional logic to ensure no duplicate pizzas can be added
+        // Add logic to ensure no duplicate pizzas here
         return pizzaRepository.save(pizza);
     }
 
@@ -51,7 +51,7 @@ public class PizzaService {
         if (newName != null && newName.length() > 0 && !pizza.getName().equals(newName)) {
             pizza.setName(newName);
         }
-        // Consider how to handle topping updates here
+        // handle topping updates here
 
         return pizzaRepository.save(pizza);
     }

@@ -9,5 +9,4 @@ public class SpringbootPizzaManagerApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(SpringbootPizzaManagerApplication.class, args);
 	}
-
 }
