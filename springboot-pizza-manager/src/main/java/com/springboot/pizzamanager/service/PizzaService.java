@@ -3,8 +3,11 @@ package com.springboot.pizzamanager.service;
 import com.springboot.pizzamanager.model.Pizza;
 import com.springboot.pizzamanager.model.Topping;
 import com.springboot.pizzamanager.repository.PizzaRepository;
+import com.springboot.pizzamanager.repository.ToppingRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
@@ -15,10 +18,12 @@ import java.util.Set;
 public class PizzaService {
 
     private final PizzaRepository pizzaRepository;
+    private final ToppingRepository toppingRepository;
 
     @Autowired
-    public PizzaService(PizzaRepository pizzaRepository) {
+    public PizzaService(PizzaRepository pizzaRepository, ToppingRepository toppingRepository) {
         this.pizzaRepository = pizzaRepository;
+        this.toppingRepository = toppingRepository;
     }
 
     public List<Pizza> findAllPizzas() {
@@ -29,11 +34,28 @@ public class PizzaService {
         return pizzaRepository.findById(id);
     }
 
-    public Pizza addPizza(Pizza pizza) {
-        // Add logic to ensure no duplicate pizzas here
+    @Transactional
+    public Pizza createPizzaWithToppings(Pizza pizza, Set<Long> toppingIds) {
+        // Check if the pizza name already exists
+        if (pizzaRepository.existsByName(pizza.getName())) {
+            throw new IllegalStateException("Pizza with name " + pizza.getName() + " already exists.");
+        }
+
+        // Fetch and associate toppings
+        Set<Topping> toppings = new HashSet<>();
+        for (Long id : toppingIds) {
+            Topping topping = toppingRepository.findById(id)
+                .orElseThrow(() -> new IllegalStateException("Topping with id " + id + " does not exist."));
+            toppings.add(topping);
+        }
+
+        pizza.setToppings(toppings);
+
+        // Save the pizza with associated toppings
         return pizzaRepository.save(pizza);
     }
-
+    
+    @Transactional
     public void deletePizza(Long id) {
         if (!pizzaRepository.existsById(id)) {
             throw new IllegalStateException("Pizza with id " + id + " does not exist.");
@@ -41,6 +63,7 @@ public class PizzaService {
         pizzaRepository.deleteById(id);
     }
 
+    @Transactional
     public Pizza updatePizza(Long id, Pizza updatedPizza) {
         Pizza pizza = pizzaRepository.findById(id)
                 .orElseThrow(() -> new IllegalStateException(
@@ -56,6 +79,7 @@ public class PizzaService {
         return pizzaRepository.save(pizza);
     }
 
+    @Transactional
     public Pizza addToppingToPizza(Long pizzaId, Topping topping) {
         Pizza pizza = pizzaRepository.findById(pizzaId)
                 .orElseThrow(() -> new IllegalStateException(
@@ -65,6 +89,7 @@ public class PizzaService {
         return pizzaRepository.save(pizza);
     }
 
+    @Transactional
     public Pizza removeToppingFromPizza(Long pizzaId, Topping topping) {
         Pizza pizza = pizzaRepository.findById(pizzaId)
                 .orElseThrow(() -> new IllegalStateException(

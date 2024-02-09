@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -17,8 +18,13 @@ public class Pizza {
     @Size(min = 1, max = 20)
     private String name;
     
-    @ManyToMany
-    private Set<Topping> toppings;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+      name = "pizza_toppings", 
+      joinColumns = @JoinColumn(name = "pizza_id"), 
+      inverseJoinColumns = @JoinColumn(name = "topping_id")
+    )
+    private Set<Topping> toppings = new HashSet<>();
     
  // Constructors
     public Pizza() {}
@@ -44,14 +50,22 @@ public class Pizza {
         this.name = name;
     }
     
+    
+    // Methods to add and remove toppings
     public void addTopping(Topping topping) {
-        toppings.add(topping);
-        topping.getPizzas().add(this);
+        this.toppings.add(topping);
     }
 
     public void removeTopping(Topping topping) {
-        toppings.remove(topping);
-        topping.getPizzas().remove(this);
+        this.toppings.remove(topping);
+    }
+    
+    public void setToppings(Set<Topping> toppings) {
+        this.toppings = toppings;
+    }
+    
+    public Set<Topping> getToppings() {
+        return this.toppings;
     }
     
 }

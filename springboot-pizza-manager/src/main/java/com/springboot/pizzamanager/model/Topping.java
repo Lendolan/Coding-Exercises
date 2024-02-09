@@ -17,8 +17,6 @@ public class Topping {
     @Size(min = 1, max = 20)
     private String name;
     
-    @ManyToMany(mappedBy = "toppings")
-    private Set<Pizza> pizzas = new HashSet<>();
     
     // Constructors, getters, and setters
     
@@ -46,11 +44,4 @@ public class Topping {
         this.name = name;
     }
     
-    public Set<Pizza> getPizzas() {
-        return pizzas;
-    }
-    
-    public void setPizzas(Set<Pizza> pizzas) {
-        this.pizzas = pizzas;
-    }
 }

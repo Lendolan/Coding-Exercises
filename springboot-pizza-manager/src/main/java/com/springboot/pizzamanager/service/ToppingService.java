@@ -4,6 +4,7 @@ import com.springboot.pizzamanager.model.Topping;
 import com.springboot.pizzamanager.repository.ToppingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,7 @@ public class ToppingService {
         return toppingRepository.findById(id);
     }
 
+    @Transactional
     public Topping addTopping(Topping topping) {
         if (toppingRepository.existsByName(topping.getName())) {
             throw new IllegalStateException("Topping already exists.");
@@ -33,6 +35,7 @@ public class ToppingService {
         return toppingRepository.save(topping);
     }
 
+    @Transactional
     public void deleteTopping(Long id) {
         if (!toppingRepository.existsById(id)) {
             throw new IllegalStateException("Topping with id " + id + " does not exist.");
@@ -40,6 +43,7 @@ public class ToppingService {
         toppingRepository.deleteById(id);
     }
 
+    @Transactional
     public Topping updateTopping(Long id, Topping updatedTopping) {
         Topping topping = toppingRepository.findById(id)
                 .orElseThrow(() -> new IllegalStateException(
@@ -50,7 +54,7 @@ public class ToppingService {
         if (newName != null && newName.length() > 0 && !topping.getName().equals(newName)) {
             topping.setName(newName);
         }
-        // Additional fields to update...
+        
 
         return toppingRepository.save(topping);
     }
