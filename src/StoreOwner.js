@@ -112,7 +112,7 @@ function Toppings({
   };
 
   return (
-    <main className="toppings">
+    <main className="text">
       <h2>Current toppings available for the pizza chefs</h2>
       {toppings.length > 0 ? (
         <>
@@ -159,7 +159,7 @@ function Topping({ toppingObj, onRemoveTopping, onUpdateTopping }) {
 
   return (
     <li>
-      <div className="topping-item">
+      <div className="text-item">
         {isEditing ? (
           <input
             type="text"

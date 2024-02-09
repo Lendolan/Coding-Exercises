@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { Multiselect } from "multiselect-react-dropdown";
 
 function PizzaChef() {
   const [pizzas, setPizzas] = useState([]);
@@ -9,6 +10,10 @@ function PizzaChef() {
   const [selectedToppings, setSelectedToppings] = useState([]);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const toppingsOptions = toppings.map((topping) => ({
+    name: topping.name,
+    id: topping.id,
+  }));
 
   const fetchData = async () => {
     try {
@@ -28,15 +33,22 @@ function PizzaChef() {
     fetchData();
   }, []);
 
-  const handleToppingChange = (toppingId) => {
-    const newSelection = selectedToppings.includes(toppingId)
-      ? selectedToppings.filter((id) => id !== toppingId)
-      : [...selectedToppings, toppingId];
-    setSelectedToppings(newSelection);
+  const onSelect = (selectedList, selectedItem) => {
+    setSelectedToppings(selectedList);
+  };
+
+  const onRemove = (selectedList, removedItem) => {
+    setSelectedToppings(selectedList);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Check if the pizza name is provided
+    if (!newPizzaName.trim()) {
+      setError("Please provide a name for the pizza.");
+      return; // Stop the function execution if no name is provided
+    }
 
     if (!selectedToppings.length) {
       setError("Please select at least one topping for the pizza.");
@@ -44,76 +56,122 @@ function PizzaChef() {
     }
 
     try {
+      // Map selectedToppings to their ids
+      const toppingIds = selectedToppings.map((topping) => topping.id);
+
       // Adjusting payload to match the new DTO structure expected by the backend
       const payload = {
         name: newPizzaName,
-        toppingIds: selectedToppings, // Directly sending the array of selected topping IDs
+        toppingIds: toppingIds, // Send only the array of selected topping IDs
       };
 
       await axios.post("http://localhost:8080/api/pizzas", payload);
 
       // Resetting the form and re-fetching pizzas to reflect the new addition
       setNewPizzaName("");
-      setSelectedToppings([]);
-      setError("");
-      fetchData();
+      setSelectedToppings([]); // Reset selected toppings
+      setError(""); // Clear any existing error messages
+      await fetchData();
     } catch (error) {
-      console.error(
-        "There was an error adding the pizza:",
-        error.response.data
+      console.error("There was an error adding the pizza:", error);
+      setError(
+        `Could not add pizza. ${
+          error.response ? error.response.data : "An unexpected error occurred."
+        }`
       );
-      setError("Could not add pizza. " + error.response.data);
+    }
+  };
+
+  const deletePizza = async (pizzaId) => {
+    try {
+      await axios.delete(`http://localhost:8080/api/pizzas/${pizzaId}`);
+      // Optionally refetch the pizzas list or remove the pizza from the state
+      fetchData(); // Assuming fetchData() fetches the list of pizzas
+    } catch (error) {
+      console.error("Failed to delete pizza", error);
+      setError("Failed to delete pizza.");
+    }
+  };
+
+  const updatePizza = async (pizzaId, newName, newToppingIds) => {
+    const payload = {
+      name: newName,
+      toppingIds: newToppingIds,
+    };
+
+    try {
+      await axios.put(`http://localhost:8080/api/pizzas/${pizzaId}`, payload);
+      fetchData(); // Fetch updated list of pizzas
+    } catch (error) {
+      console.error("Failed to update pizza", error);
+      setError("Failed to update pizza.");
     }
   };
 
   const renderPizzas = () => {
-    console.log(pizzas);
-    return pizzas.map((pizza) => (
-      <div key={pizza.id} style={{ margin: "10px 0" }}>
-        <h3>{pizza.name}</h3>
-        <ul>
-          {pizza.toppings?.map((topping) => (
-            <li key={topping.id}>{topping.name}</li>
-          ))}
-        </ul>
+    if (pizzas.length === 0) {
+      return <div className="text">There are currently no pizzas!</div>;
+    }
+
+    return (
+      <div className="pizzas-container">
+        {pizzas.map((pizza) => (
+          <div className="pizza-item" key={pizza.id}>
+            <div className="pizza-name-container">
+              <h3>{pizza.name}</h3>
+              <button
+                onClick={() => deletePizza(pizza.id)}
+                className="delete-icon"
+              >
+                🗑️
+              </button>
+            </div>
+            <ul className="toppings-list">
+              {pizza.toppings.map((topping) => (
+                <li key={topping.id}>{topping.name}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
-    ));
+    );
   };
 
   return (
     <div>
       <Header title="Pizza Manager" />
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={newPizzaName}
-          onChange={(e) => setNewPizzaName(e.target.value)}
-          placeholder="Pizza Name"
+      <form className="form-container" onSubmit={handleSubmit}>
+        <div className="input-button-container">
+          {" "}
+          {/* New container div for Flexbox layout */}
+          <input
+            type="text"
+            value={newPizzaName}
+            onChange={(e) => setNewPizzaName(e.target.value)}
+            placeholder="Pizza Name"
+          />
+          <button type="submit" className="smlbtn">
+            Add Pizza
+          </button>
+        </div>
+        <Multiselect
+          key={new Date().toISOString()}
+          options={toppingsOptions}
+          selectedValues={selectedToppings}
+          onSelect={onSelect}
+          onRemove={onRemove}
+          displayValue="name"
+          placeholder="Select Toppings"
         />
-        <select
-          multiple={true}
-          value={selectedToppings}
-          onChange={(e) => handleToppingChange(e.target.value)}
-        >
-          {toppings.map((topping) => (
-            <option key={topping.id} value={topping.id}>
-              {topping.name}
-            </option>
-          ))}
-        </select>
-        <button type="submit">Add Pizza</button>
       </form>
-      {error && <div>{error}</div>}
+      {error && <div className="error">{error}</div>}
+      <div className="pizzas-container">{renderPizzas()}</div>
       <div
         style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}
       >
         <button className="btn" onClick={() => navigate("/")}>
           Return to Home
         </button>
-      </div>
-      <div>
-        <h2>Available Pizzas</h2>
-        {renderPizzas()}
       </div>
     </div>
   );
