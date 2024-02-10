@@ -2,6 +2,7 @@ package com.springboot.pizzamanager.controller;
 
 import com.springboot.pizzamanager.dto.PizzaRequest;
 import com.springboot.pizzamanager.dto.PizzaResponse;
+import com.springboot.pizzamanager.dto.PizzaUpdateRequest;
 import com.springboot.pizzamanager.dto.ToppingDTO;
 import com.springboot.pizzamanager.model.Pizza;
 import com.springboot.pizzamanager.model.Topping;
@@ -90,8 +91,18 @@ public class PizzaController {
     }
 
     @PutMapping("/{id}")
-    public Pizza updatePizza(@PathVariable Long id, @RequestBody Pizza pizza) {
-        return pizzaService.updatePizza(id, pizza);
+    public ResponseEntity<PizzaResponse> updatePizza(@PathVariable Long id, @RequestBody PizzaUpdateRequest updateRequest) {
+        Pizza updatedPizza = pizzaService.updatePizza(id, updateRequest);
+        // Conversion of Pizza to PizzaResponse (including topping conversion) goes here
+        PizzaResponse response = convertToPizzaResponse(updatedPizza);
+        return ResponseEntity.ok(response);
+    }
+    
+    private PizzaResponse convertToPizzaResponse(Pizza pizza) {
+        Set<ToppingDTO> toppingDTOs = pizza.getToppings().stream()
+                .map(topping -> new ToppingDTO(topping.getId(), topping.getName()))
+                .collect(Collectors.toSet());
+        return new PizzaResponse(pizza.getId(), pizza.getName(), toppingDTOs);
     }
 
     // Endpoint to add a topping to a pizza

@@ -1,5 +1,6 @@
 package com.springboot.pizzamanager.service;
 
+import com.springboot.pizzamanager.dto.PizzaUpdateRequest;
 import com.springboot.pizzamanager.model.Pizza;
 import com.springboot.pizzamanager.model.Topping;
 import com.springboot.pizzamanager.repository.PizzaRepository;
@@ -13,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class PizzaService {
@@ -64,17 +66,24 @@ public class PizzaService {
     }
 
     @Transactional
-    public Pizza updatePizza(Long id, Pizza updatedPizza) {
+    public Pizza updatePizza(Long id, PizzaUpdateRequest updateRequest) {
         Pizza pizza = pizzaRepository.findById(id)
                 .orElseThrow(() -> new IllegalStateException(
                         "Pizza with id " + id + " does not exist."
                 ));
 
-        String newName = updatedPizza.getName();
+        String newName = updateRequest.getName();
         if (newName != null && newName.length() > 0 && !pizza.getName().equals(newName)) {
             pizza.setName(newName);
         }
-        // handle topping updates here
+
+        // Handle topping updates
+        Set<Topping> updatedToppings = updateRequest.getToppingIds().stream()
+                .map(toppingId -> toppingRepository.findById(toppingId)
+                        .orElseThrow(() -> new IllegalStateException("Topping with id " + toppingId + " does not exist.")))
+                .collect(Collectors.toSet());
+
+        pizza.setToppings(updatedToppings); // Set the updated toppings
 
         return pizzaRepository.save(pizza);
     }
