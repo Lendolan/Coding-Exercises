@@ -216,7 +216,7 @@ h3 {
   margin-bottom: 5px;
 }
 
-.delete-icon {
+.icon {
   border: none;
   background: transparent;
   cursor: pointer;
@@ -231,4 +231,11 @@ h3 {
   display: flex;
   flex-direction: column;
   align-items: center; /* Center align the container */
+}
+
+.editing-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }

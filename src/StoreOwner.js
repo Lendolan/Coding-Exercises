@@ -113,6 +113,17 @@ function Toppings({
 
   return (
     <main className="text">
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={newToppingName}
+          onChange={(e) => setNewToppingName(e.target.value)}
+          placeholder="Enter new topping"
+        />
+        <button className="smlbtn" type="submit">
+          Add Topping
+        </button>
+      </form>
       <h2>Current toppings available for the pizza chefs</h2>
       {toppings.length > 0 ? (
         <>
@@ -131,17 +142,6 @@ function Toppings({
         <p>There are currently no toppings available!</p>
       )}
       {error && <p className="error">{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={newToppingName}
-          onChange={(e) => setNewToppingName(e.target.value)}
-          placeholder="Enter new topping"
-        />
-        <button className="smlbtn" type="submit">
-          Add Topping
-        </button>
-      </form>
     </main>
   );
 }
@@ -168,14 +168,7 @@ function Topping({ toppingObj, onRemoveTopping, onUpdateTopping }) {
           />
         ) : (
           <>
-            <button
-              onClick={handleEdit}
-              style={{
-                border: "none",
-                background: "transparent",
-                cursor: "pointer",
-              }}
-            >
+            <button onClick={handleEdit} className="icon">
               ✏️
             </button>
             <h3>{toppingObj.name}</h3>
@@ -184,11 +177,7 @@ function Topping({ toppingObj, onRemoveTopping, onUpdateTopping }) {
         {!isEditing && (
           <button
             onClick={() => onRemoveTopping(toppingObj.id)}
-            style={{
-              border: "none",
-              background: "transparent",
-              cursor: "pointer",
-            }}
+            className="icon"
           >
             🗑️
           </button>

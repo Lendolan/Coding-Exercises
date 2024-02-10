@@ -14,6 +14,9 @@ function PizzaChef() {
     name: topping.name,
     id: topping.id,
   }));
+  const [editingPizzaId, setEditingPizzaId] = useState(null);
+  const [tempPizzaName, setTempPizzaName] = useState("");
+  const [tempSelectedToppings, setTempSelectedToppings] = useState([]);
 
   const fetchData = async () => {
     try {
@@ -39,6 +42,17 @@ function PizzaChef() {
 
   const onRemove = (selectedList, removedItem) => {
     setSelectedToppings(selectedList);
+  };
+
+  const startEditing = (pizza) => {
+    setEditingPizzaId(pizza.id);
+    setTempPizzaName(pizza.name);
+    // Convert pizza toppings to the format expected by Multiselect
+    const tempToppings = pizza.toppings.map((topping) => ({
+      id: topping.id,
+      name: topping.name,
+    }));
+    setTempSelectedToppings(tempToppings);
   };
 
   const handleSubmit = async (e) => {
@@ -101,6 +115,7 @@ function PizzaChef() {
 
     try {
       await axios.put(`http://localhost:8080/api/pizzas/${pizzaId}`, payload);
+      setEditingPizzaId(null); // Reset editing state
       fetchData(); // Fetch updated list of pizzas
     } catch (error) {
       console.error("Failed to update pizza", error);
@@ -117,20 +132,62 @@ function PizzaChef() {
       <div className="pizzas-container">
         {pizzas.map((pizza) => (
           <div className="pizza-item" key={pizza.id}>
-            <div className="pizza-name-container">
-              <h3>{pizza.name}</h3>
-              <button
-                onClick={() => deletePizza(pizza.id)}
-                className="delete-icon"
-              >
-                🗑️
-              </button>
-            </div>
-            <ul className="toppings-list">
-              {pizza.toppings.map((topping) => (
-                <li key={topping.id}>{topping.name}</li>
-              ))}
-            </ul>
+            {editingPizzaId === pizza.id ? (
+              <div className="editing-container">
+                <div className="input-button-container">
+                  <input
+                    value={tempPizzaName}
+                    onChange={(e) => setTempPizzaName(e.target.value)}
+                    placeholder="Pizza Name"
+                  />
+                  <button
+                    onClick={() =>
+                      updatePizza(
+                        pizza.id,
+                        tempPizzaName,
+                        tempSelectedToppings.map((topping) => topping.id)
+                      )
+                    }
+                    className="smlbtn" // Ensure the button styling matches your existing buttons
+                  >
+                    Update
+                  </button>
+                </div>
+                <Multiselect
+                  options={toppingsOptions}
+                  selectedValues={tempSelectedToppings}
+                  onSelect={(selectedList) =>
+                    setTempSelectedToppings(selectedList)
+                  }
+                  onRemove={(selectedList) =>
+                    setTempSelectedToppings(selectedList)
+                  }
+                  displayValue="name"
+                  placeholder="Select Toppings"
+                  style={{ width: "100%" }} // Adjust the width as needed
+                />
+              </div>
+            ) : (
+              <>
+                <div className="pizza-name-container">
+                  <button onClick={() => startEditing(pizza)} className="icon">
+                    ✏️
+                  </button>
+                  <h3>{pizza.name}</h3>
+                  <button
+                    onClick={() => deletePizza(pizza.id)}
+                    className="icon"
+                  >
+                    🗑️
+                  </button>
+                </div>
+                <ul className="toppings-list">
+                  {pizza.toppings.map((topping) => (
+                    <li key={topping.id}>{topping.name}</li>
+                  ))}
+                </ul>
+              </>
+            )}
           </div>
         ))}
       </div>
